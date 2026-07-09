@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/dashboard/placeholder-page";
+import { ApiPlayground } from "@/components/dashboard/api-playground";
 
 export default function PlaygroundPage() {
-  return <PlaceholderPage title="API Playground" />;
+  return <ApiPlayground />;
 }

@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { ApiKeyLimitError, MAX_ACTIVE_API_KEYS } from "@/lib/api-key-limits";
-import { getSupabaseAdmin } from "@/lib/supabase/server";import type { ApiKey, ApiKeyPublic, CreateApiKeyInput, UpdateApiKeyInput } from "@/types/api-key";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import type { ApiKey, ApiKeyPublic, CreateApiKeyInput, UpdateApiKeyInput } from "@/types/api-key";
 
 type ApiKeyRow = {
   id: string;
@@ -53,7 +54,8 @@ export async function countActiveApiKeys(): Promise<number> {
   return count ?? 0;
 }
 
-export async function listApiKeys(): Promise<ApiKeyPublic[]> {  const supabase = getSupabaseAdmin();
+export async function listApiKeys(): Promise<ApiKeyPublic[]> {
+  const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("api_keys")
@@ -86,7 +88,8 @@ export async function createApiKey(input: CreateApiKeyInput): Promise<ApiKey> {
     throw new ApiKeyLimitError();
   }
 
-  const supabase = getSupabaseAdmin();  const now = new Date().toISOString();
+  const supabase = getSupabaseAdmin();
+  const now = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("api_keys")
@@ -141,4 +144,29 @@ export async function deleteApiKey(id: string): Promise<boolean> {
   if (error) handleDbError(error, "delete API key");
 
   return Boolean(data);
+}
+
+export async function verifyApiKeyByValue(
+  key: string,
+): Promise<{ valid: true; name: string } | { valid: false }> {
+  const supabase = getSupabaseAdmin();
+  const trimmed = key.trim();
+
+  if (!trimmed) {
+    return { valid: false };
+  }
+
+  const { data, error } = await supabase
+    .from("api_keys")
+    .select("name")
+    .eq("value", trimmed)
+    .maybeSingle();
+
+  if (error) handleDbError(error, "verify API key");
+
+  if (!data) {
+    return { valid: false };
+  }
+
+  return { valid: true, name: data.name };
 }
