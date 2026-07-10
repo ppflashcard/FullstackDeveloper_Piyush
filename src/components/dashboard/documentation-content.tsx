@@ -70,6 +70,40 @@ const ENDPOINTS: EndpointDoc[] = [
 }`,
   },
   {
+    id: "cat-facts",
+    title: "Get cat fact (proxied)",
+    method: "GET",
+    path: "/api/cat-facts",
+    description:
+      "Requires your API key in the x-api-key header (or Authorization: Bearer). Proxies to catfact.ninja and increments usage on each successful call. Returns 401 if the key is missing or invalid, and 429 when monthly credits are exhausted.",
+    response: `{
+  "fact": "Cats sleep 70% of their lives.",
+  "length": 33,
+  "keyName": "My Postman Key",
+  "usage": 1
+}
+
+// Missing key (401)
+{
+  "error": "No API key provided. Add the x-api-key header or Authorization: Bearer sk_... with your key from the dashboard.",
+  "code": "MISSING_API_KEY"
+}
+
+// Invalid key (401)
+{
+  "error": "API key is invalid or has been deleted. Create a new key in the dashboard or copy the correct sk_... value.",
+  "code": "INVALID_API_KEY"
+}
+
+// Limit reached (429)
+{
+  "error": "Monthly API callout limit reached (1,000 / 1,000 credits used). Upgrade your plan or wait for the next billing cycle.",
+  "code": "USAGE_LIMIT_EXCEEDED",
+  "totalUsage": 1000,
+  "limit": 1000
+}`,
+  },
+  {
     id: "get-key",
     title: "Get API key by ID",
     method: "GET",
@@ -197,15 +231,15 @@ export function DocumentationContent({ baseUrl }: DocumentationContentProps) {
         <section id="postman" className="space-y-4">
           <h2 className="text-lg font-semibold">Postman quick start</h2>
 
-          <Callout variant="info" title="Verify an API key">
+          <Callout variant="info" title="Fetch a cat fact with your API key">
             <ol className="list-decimal space-y-2 pl-5">
               <li>Create a key via the dashboard or POST {baseUrl}/api/api-keys</li>
               <li>Copy the full key value from the response (starts with sk_)</li>
               <li>
-                Send POST {baseUrl}/api/api-keys/verify with body{" "}
-                <code className="font-mono">{`{"key":"sk_..."}`}</code>
+                Send GET {baseUrl}/api/cat-facts with header{" "}
+                <code className="font-mono">x-api-key: sk_...</code>
               </li>
-              <li>A 200 response means the key is valid; 404 means it was not found</li>
+              <li>Each successful response increments that key&apos;s usage in the dashboard</li>
             </ol>
           </Callout>
 
@@ -220,9 +254,8 @@ export function DocumentationContent({ baseUrl }: DocumentationContentProps) {
         <section id="curl" className="space-y-4">
           <h2 className="text-lg font-semibold">curl examples</h2>
           <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-xs leading-relaxed text-stone-100">
-            {`curl -X POST ${baseUrl}/api/api-keys/verify \\
-  -H "Content-Type: application/json" \\
-  -d "{\\"key\\":\\"sk_your_key_here\\"}"`}
+            {`curl ${baseUrl}/api/cat-facts \\
+  -H "x-api-key: sk_your_key_here"`}
           </pre>
         </section>
       </div>

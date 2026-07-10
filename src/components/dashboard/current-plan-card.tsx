@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const PLAN_CREDITS = 1000;
+import { PLAN_CREDITS } from "@/lib/api-key-limits";
 
 type CurrentPlanCardProps = {
   totalUsage: number;

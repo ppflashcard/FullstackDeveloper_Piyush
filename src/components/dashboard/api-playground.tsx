@@ -8,10 +8,11 @@ import { getApiError, parseJsonResponse } from "@/lib/api-client";
 
 type ToastState = { message: string; type: ToastVariant } | null;
 
-type VerifyResponse = {
-  valid: boolean;
-  name?: string;
-  message?: string;
+type CatFactResponse = {
+  fact: string;
+  length: number;
+  keyName?: string;
+  usage?: number;
   error?: string;
 };
 
@@ -19,28 +20,36 @@ export function ApiPlayground() {
   const [apiKey, setApiKey] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
+  const [result, setResult] = useState<CatFactResponse | null>(null);
 
-  async function handleVerify(event: React.FormEvent) {
+  async function handleFetch(event: React.FormEvent) {
     event.preventDefault();
-    if (!apiKey.trim()) return;
+    if (!apiKey.trim()) {
+      setToast({
+        type: "error",
+        message:
+          "API key is empty. Paste your full sk_... key from the dashboard Overview page.",
+      });
+      return;
+    }
 
     setSubmitting(true);
     setToast(null);
+    setResult(null);
 
     try {
-      const response = await fetch("/api/api-keys/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: apiKey.trim() }),
+      const response = await fetch("/api/cat-facts", {
+        headers: { "x-api-key": apiKey.trim() },
       });
 
       if (response.ok) {
-        const data = await parseJsonResponse<VerifyResponse>(response);
+        const data = await parseJsonResponse<CatFactResponse>(response);
+        setResult(data);
         setToast({
           type: "success",
-          message: data.name
-            ? `Key is valid! Found "${data.name}" in the database.`
-            : "Key is valid and present in the database.",
+          message: data.usage
+            ? `Cat fact fetched! Usage is now ${data.usage}. Refresh Overview to see updated credits.`
+            : "Cat fact fetched successfully!",
         });
         return;
       }
@@ -48,10 +57,7 @@ export function ApiPlayground() {
       const message = await getApiError(response);
       setToast({
         type: "error",
-        message:
-          response.status === 404
-            ? "Key is invalid and not found in the database."
-            : message,
+        message,
       });
     } catch {
       setToast({
@@ -77,13 +83,14 @@ export function ApiPlayground() {
       <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
-            <h2 className="text-base font-semibold">Verify API Key</h2>
+            <h2 className="text-base font-semibold">Fetch Cat Fact</h2>
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-              Enter your API key below to check if it exists in the database.
+              Send your API key as a header to proxy a request to catfact.ninja. Each
+              successful call increments your key&apos;s usage.
             </p>
           </div>
 
-          <form onSubmit={handleVerify} className="space-y-5 p-5 sm:p-6">
+          <form onSubmit={handleFetch} className="space-y-5 p-5 sm:p-6">
             <div>
               <label htmlFor="playground-key" className="mb-1.5 block text-sm font-medium">
                 API Key
@@ -98,19 +105,36 @@ export function ApiPlayground() {
                 required
               />
               <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-                Paste the full key you received when the key was created.
+                Sent as <code className="text-orange-600 dark:text-orange-400">x-api-key</code> header.
               </p>
             </div>
 
             <Button type="submit" disabled={submitting || !apiKey.trim()} className="w-full sm:w-auto">
-              {submitting ? "Verifying..." : "Verify Key"}
+              {submitting ? "Fetching..." : "Get Cat Fact"}
             </Button>
           </form>
+
+          {result?.fact ? (
+            <div className="border-t border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                Response
+              </p>
+              <blockquote className="rounded-xl bg-orange-50 px-4 py-3 text-sm italic text-stone-800 dark:bg-orange-950/30 dark:text-stone-200">
+                &ldquo;{result.fact}&rdquo;
+              </blockquote>
+              {result.usage != null ? (
+                <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
+                  Key: {result.keyName ?? "—"} · Usage: {result.usage}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <div className="mt-6 rounded-xl border border-dashed border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">
-          Keys are checked against your Supabase <code className="text-orange-600 dark:text-orange-400">api_keys</code> table.
-          Invalid or deleted keys will not pass verification.
+          Proxies to{" "}
+          <code className="text-orange-600 dark:text-orange-400">https://catfact.ninja/fact</code>.
+          Missing keys return 401, invalid keys return 401, and exhausted plan credits return 429.
         </div>
       </div>
 

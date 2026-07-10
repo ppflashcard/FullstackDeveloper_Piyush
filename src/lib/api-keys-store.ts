@@ -1,5 +1,10 @@
 import { randomBytes } from "crypto";
-import { ApiKeyLimitError, MAX_ACTIVE_API_KEYS } from "@/lib/api-key-limits";
+import {
+  ApiKeyLimitError,
+  ApiUsageLimitError,
+  MAX_ACTIVE_API_KEYS,
+  PLAN_CREDITS,
+} from "@/lib/api-key-limits";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import type { ApiKey, ApiKeyPublic, CreateApiKeyInput, UpdateApiKeyInput } from "@/types/api-key";
 
@@ -169,4 +174,60 @@ export async function verifyApiKeyByValue(
   }
 
   return { valid: true, name: data.name };
+}
+
+export function extractApiKeyFromRequest(request: Request): string | null {
+  const headerKey = request.headers.get("x-api-key")?.trim();
+  if (headerKey) return headerKey;
+
+  const auth = request.headers.get("authorization")?.trim();
+  if (auth?.toLowerCase().startsWith("bearer ")) {
+    const token = auth.slice(7).trim();
+    if (token) return token;
+  }
+
+  return null;
+}
+
+export async function getTotalApiUsage(): Promise<number> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase.from("api_keys").select("usage");
+
+  if (error) handleDbError(error, "get total API usage");
+
+  return (data ?? []).reduce((sum, row) => sum + (Number(row.usage) || 0), 0);
+}
+
+export async function assertCanMakeApiCallout(): Promise<void> {
+  const totalUsage = await getTotalApiUsage();
+
+  if (totalUsage >= PLAN_CREDITS) {
+    throw new ApiUsageLimitError(totalUsage);
+  }
+}
+
+export async function incrementApiKeyUsage(key: string): Promise<number | null> {
+  const supabase = getSupabaseAdmin();
+  const trimmed = key.trim();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("api_keys")
+    .select("id, usage")
+    .eq("value", trimmed)
+    .maybeSingle();
+
+  if (fetchError) handleDbError(fetchError, "fetch API key usage");
+  if (!existing) return null;
+
+  const newUsage = (Number(existing.usage) || 0) + 1;
+
+  const { error: updateError } = await supabase
+    .from("api_keys")
+    .update({ usage: newUsage })
+    .eq("id", existing.id);
+
+  if (updateError) handleDbError(updateError, "increment API key usage");
+
+  return newUsage;
 }
