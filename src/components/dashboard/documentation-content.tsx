@@ -234,6 +234,224 @@ export function DocumentationContent({ baseUrl }: DocumentationContentProps) {
           </p>
         </Callout>
 
+        <section id="where-to-put-things" className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">
+              Where to put the API key, headers, and body
+            </h2>
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+              Think of every API call as three parts: the address (URL), optional
+              labels (headers), and optional message content (body). Below is exactly
+              where each piece goes.
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
+              <h3 className="text-base font-semibold">1. The URL (address)</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                This is the full link you call. Put it in the address bar of Postman
+                (or the URL field of any API tool).
+              </p>
+            </div>
+            <div className="space-y-3 p-5 text-sm text-stone-700 dark:text-stone-300 sm:p-6">
+              <p>
+                Example for a cat fact:{" "}
+                <code className="break-all font-mono text-orange-600 dark:text-orange-400">
+                  {baseUrl}/api/cat-facts
+                </code>
+              </p>
+              <p>
+                Example to verify a key:{" "}
+                <code className="break-all font-mono text-orange-600 dark:text-orange-400">
+                  {baseUrl}/api/api-keys/verify
+                </code>
+              </p>
+              <p className="text-stone-500 dark:text-stone-400">
+                Also choose the method next to the URL: use <strong>GET</strong> for
+                cat facts, and <strong>POST</strong> when the docs show a request body.
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
+              <h3 className="text-base font-semibold">2. The API key (most important)</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                Your key looks like <code className="font-mono">sk_...</code>. It proves
+                who you are. Do <strong>not</strong> put it in the URL. Put it in a
+                header (or in the Playground box).
+              </p>
+            </div>
+            <div className="space-y-4 p-5 sm:p-6">
+              <Callout variant="success" title="Option A — Inside this website (easiest)">
+                <ol className="list-decimal space-y-1.5 pl-5">
+                  <li>Go to <strong>API Playground</strong> in the left menu.</li>
+                  <li>
+                    Find the field labeled <strong>API Key</strong>.
+                  </li>
+                  <li>
+                    Paste your full key there (starts with <code className="font-mono">sk_</code>).
+                  </li>
+                  <li>Click the fetch button. The site adds the header for you.</li>
+                </ol>
+              </Callout>
+
+              <Callout variant="info" title="Option B — In Postman (Headers tab)">
+                <ol className="list-decimal space-y-1.5 pl-5">
+                  <li>Open Postman and create a new request.</li>
+                  <li>
+                    Set method to <strong>GET</strong> and URL to{" "}
+                    <code className="font-mono break-all">
+                      {baseUrl}/api/cat-facts
+                    </code>
+                    .
+                  </li>
+                  <li>
+                    Click the <strong>Headers</strong> tab (not Params, not Body).
+                  </li>
+                  <li>
+                    Add a new row:
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      <li>
+                        <strong>Key</strong> (left column):{" "}
+                        <code className="font-mono">x-api-key</code>
+                      </li>
+                      <li>
+                        <strong>Value</strong> (right column): your full key, e.g.{" "}
+                        <code className="font-mono">sk_abc123...</code>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>Click <strong>Send</strong>.</li>
+                </ol>
+                <p className="mt-3 text-stone-600 dark:text-stone-400">
+                  Alternate header (same meaning): Key ={" "}
+                  <code className="font-mono">Authorization</code>, Value ={" "}
+                  <code className="font-mono">Bearer sk_abc123...</code> (include the
+                  word Bearer, then a space, then your key).
+                </p>
+              </Callout>
+
+              <div className="rounded-xl bg-stone-950 p-4 text-xs leading-relaxed text-stone-100">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+                  Header example (what Postman is sending)
+                </p>
+                <pre className="overflow-x-auto font-mono">{`x-api-key: sk_your_full_key_here`}</pre>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
+              <h3 className="text-base font-semibold">3. Other headers (when needed)</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                Headers are name/value pairs. You add them in Postman under the{" "}
+                <strong>Headers</strong> tab, one row per header.
+              </p>
+            </div>
+            <div className="overflow-x-auto p-5 sm:p-6">
+              <table className="w-full min-w-[28rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500 dark:border-stone-700 dark:text-stone-400">
+                    <th className="pb-2 pr-4 font-semibold">Header name</th>
+                    <th className="pb-2 pr-4 font-semibold">Header value</th>
+                    <th className="pb-2 font-semibold">When to use</th>
+                  </tr>
+                </thead>
+                <tbody className="text-stone-700 dark:text-stone-300">
+                  <tr className="border-b border-stone-100 dark:border-stone-800">
+                    <td className="py-3 pr-4 font-mono text-xs">x-api-key</td>
+                    <td className="py-3 pr-4 font-mono text-xs">sk_...</td>
+                    <td className="py-3">Cat fact callout (required)</td>
+                  </tr>
+                  <tr className="border-b border-stone-100 dark:border-stone-800">
+                    <td className="py-3 pr-4 font-mono text-xs">Authorization</td>
+                    <td className="py-3 pr-4 font-mono text-xs">Bearer sk_...</td>
+                    <td className="py-3">Same as x-api-key (pick one)</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-mono text-xs">Content-Type</td>
+                    <td className="py-3 pr-4 font-mono text-xs">application/json</td>
+                    <td className="py-3">
+                      Only for POST/PUT when you send a body (Postman often adds this
+                      for you)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800 sm:px-6">
+              <h3 className="text-base font-semibold">4. The body (only for some requests)</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                The body is the JSON message you send. Cat facts use <strong>GET</strong>{" "}
+                — leave the body empty. Use a body only when the docs show a “Request
+                body” example (for example, verify key).
+              </p>
+            </div>
+            <div className="space-y-4 p-5 text-sm text-stone-700 dark:text-stone-300 sm:p-6">
+              <Callout variant="warning" title="Cat fact callout — no body">
+                Method = <strong>GET</strong>. Headers = your API key. Body tab = leave
+                empty / do not send.
+              </Callout>
+
+              <div>
+                <p className="mb-2 font-medium text-stone-900 dark:text-stone-100">
+                  Example: verify an API key in Postman
+                </p>
+                <ol className="list-decimal space-y-2 pl-5">
+                  <li>
+                    Method: <strong>POST</strong>
+                  </li>
+                  <li>
+                    URL:{" "}
+                    <code className="break-all font-mono text-orange-600 dark:text-orange-400">
+                      {baseUrl}/api/api-keys/verify
+                    </code>
+                  </li>
+                  <li>
+                    Open the <strong>Body</strong> tab → choose <strong>raw</strong> →
+                    choose <strong>JSON</strong> from the dropdown on the right.
+                  </li>
+                  <li>Paste this into the body editor:</li>
+                </ol>
+                <pre className="mt-3 overflow-x-auto rounded-xl bg-stone-950 p-4 text-xs leading-relaxed text-stone-100">
+                  {`{
+  "key": "sk_your_full_key_here"
+}`}
+                </pre>
+                <p className="mt-3 text-stone-500 dark:text-stone-400">
+                  Then click <strong>Send</strong>. You should get back whether the key
+                  is valid.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Callout variant="tip" title="Quick memory aid">
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>
+                <strong>URL</strong> = where to send the request
+              </li>
+              <li>
+                <strong>Headers</strong> = where the API key goes (
+                <code className="font-mono">x-api-key</code>)
+              </li>
+              <li>
+                <strong>Body</strong> = JSON only when the docs show a request body
+                (not for GET cat facts)
+              </li>
+              <li>
+                <strong>Playground</strong> = paste the key in the box; no headers or
+                body to worry about
+              </li>
+            </ul>
+          </Callout>
+        </section>
+
         <section id="easy-tests" className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold">
@@ -396,14 +614,36 @@ export function DocumentationContent({ baseUrl }: DocumentationContentProps) {
 
           <Callout variant="info" title="Fetch a cat fact with your API key">
             <ol className="list-decimal space-y-2 pl-5">
-              <li>Create a key via the dashboard or POST {baseUrl}/api/api-keys</li>
-              <li>Copy the full key value from the response (starts with sk_)</li>
               <li>
-                Send GET {baseUrl}/api/cat-facts with header{" "}
-                <code className="font-mono">x-api-key: sk_...</code>
+                Create a key on the <strong>Overview</strong> page and copy the full{" "}
+                <code className="font-mono">sk_...</code> value.
               </li>
-              <li>Each successful response increments that key&apos;s usage in the dashboard</li>
+              <li>
+                In Postman: method <strong>GET</strong>, URL{" "}
+                <code className="font-mono break-all">{baseUrl}/api/cat-facts</code>
+              </li>
+              <li>
+                Open the <strong>Headers</strong> tab. Add{" "}
+                <code className="font-mono">x-api-key</code> = your key. Do not put the
+                key in Params or Body.
+              </li>
+              <li>
+                Leave <strong>Body</strong> empty. Click <strong>Send</strong>.
+              </li>
+              <li>
+                Each successful response increments that key&apos;s usage on Overview.
+              </li>
             </ol>
+            <p className="mt-3">
+              Need more detail? See{" "}
+              <a
+                href="#where-to-put-things"
+                className="font-medium text-orange-600 hover:text-orange-700"
+              >
+                Where to put the API key, headers, and body
+              </a>{" "}
+              above.
+            </p>
           </Callout>
 
           <Callout variant="warning" title="Environment variables">
