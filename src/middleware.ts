@@ -8,19 +8,13 @@ export default auth((request) => {
   const { pathname } = request.nextUrl;
   const isLoggedIn = !!request.auth;
 
-  if (pathname === "/") {
-    return NextResponse.redirect(
-      new URL(isLoggedIn ? "/dashboard" : "/login", request.url),
-    );
-  }
-
   if (pathname.startsWith("/dashboard") && !isLoggedIn) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname === "/login" && isLoggedIn) {
+  if ((pathname === "/login" || pathname === "/signup") && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -28,5 +22,5 @@ export default auth((request) => {
 });
 
 export const config = {
-  matcher: ["/", "/login", "/dashboard/:path*"],
+  matcher: ["/", "/login", "/signup", "/dashboard/:path*"],
 };

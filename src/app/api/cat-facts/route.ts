@@ -7,8 +7,13 @@ import {
   incrementApiKeyUsage,
   verifyApiKeyByValue,
 } from "@/lib/api-keys-store";
+import { findUserById } from "@/lib/users-store";
 
-type ApiErrorCode = "MISSING_API_KEY" | "INVALID_API_KEY" | "USAGE_LIMIT_EXCEEDED";
+type ApiErrorCode =
+  | "MISSING_API_KEY"
+  | "INVALID_API_KEY"
+  | "USER_NOT_FOUND"
+  | "USAGE_LIMIT_EXCEEDED";
 
 function apiError(
   code: ApiErrorCode,
@@ -45,6 +50,15 @@ export async function GET(request: Request) {
         "INVALID_API_KEY",
         "This API key is not linked to a user account. Sign in and create a new key from the dashboard.",
         401,
+      );
+    }
+
+    const user = await findUserById(verified.userId);
+    if (!user) {
+      return apiError(
+        "USER_NOT_FOUND",
+        "This API key belongs to a user that does not exist in the database. Sign up or sign in again so your account is saved, then create a new API key.",
+        403,
       );
     }
 

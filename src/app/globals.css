@@ -114,3 +114,57 @@
   );
   background-size: 200% 100%;
 }
+
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-pan {
+  0% {
+    background-position: 0% 40%;
+  }
+  50% {
+    background-position: 100% 60%;
+  }
+  100% {
+    background-position: 0% 40%;
+  }
+}
+
+.landing-hero-bg {
+  background-color: #0c0a09;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 20% 20%, rgba(249, 115, 22, 0.35), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(234, 88, 12, 0.22), transparent 50%),
+    linear-gradient(160deg, #1c1917 0%, #0c0a09 45%, #292524 100%);
+  background-size: 140% 140%;
+  animation: landing-pan 18s ease-in-out infinite;
+}
+
+.landing-fade-up {
+  animation: landing-fade-up 0.7s ease-out both;
+}
+
+.landing-delay-1 {
+  animation-delay: 0.12s;
+}
+
+.landing-delay-2 {
+  animation-delay: 0.24s;
+}
+
+.landing-delay-3 {
+  animation-delay: 0.36s;
+}
+
+.landing-detail-block {
+  border-left: 2px solid rgb(249 115 22 / 0.45);
+  padding-left: 1rem;
+}

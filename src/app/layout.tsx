@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Dashboard | Fullstack",
-  description: "Manage your API keys and workspace",
+  title: "fullstack — API keys & usage",
+  description:
+    "Create API keys, try endpoints, and manage usage. Sign up free or continue with Google.",
 };
 
 export default function RootLayout({

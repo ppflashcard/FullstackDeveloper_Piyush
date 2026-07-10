@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { CredentialsSignInForm } from "@/components/auth/credentials-sign-in-form";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 type LoginPageProps = {
@@ -24,12 +26,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-lg font-bold text-white shadow-lg shadow-orange-500/30">
-            F
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
-            fullstack
-          </h1>
+          <Link href="/" className="inline-block">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-lg font-bold text-white shadow-lg shadow-orange-500/30">
+              F
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
+              fullstack
+            </h1>
+          </Link>
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
             Sign in to manage your API keys and usage.
           </p>
@@ -40,17 +44,31 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Welcome back
           </h2>
           <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-            Use your Google account to continue. Your API keys stay private to
-            your account.
+            Sign in with email and password, or continue with Google.
           </p>
 
           <div className="mt-6">
-            <GoogleSignInButton callbackUrl={callbackUrl} />
+            <CredentialsSignInForm callbackUrl={callbackUrl} />
           </div>
 
-          <p className="mt-6 text-center text-xs text-stone-400 dark:text-stone-500">
-            By continuing, you agree to use this workspace for your own API keys
-            only.
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-stone-200 dark:bg-stone-700" />
+            <span className="text-xs uppercase tracking-wide text-stone-400">
+              or
+            </span>
+            <div className="h-px flex-1 bg-stone-200 dark:bg-stone-700" />
+          </div>
+
+          <GoogleSignInButton callbackUrl={callbackUrl} />
+
+          <p className="mt-6 text-center text-sm text-stone-500 dark:text-stone-400">
+            New here?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-orange-600 hover:text-orange-700"
+            >
+              Create an account
+            </Link>
           </p>
         </section>
       </div>

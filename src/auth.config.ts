@@ -14,23 +14,7 @@ export const authConfig = {
         return isLoggedIn;
       }
 
-      if (pathname === "/login") {
-        return true;
-      }
-
       return true;
-    },
-    jwt({ token, account, profile }) {
-      if (account && profile) {
-        token.sub = profile.sub ?? token.sub;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-      return session;
     },
   },
   trustHost: true,
