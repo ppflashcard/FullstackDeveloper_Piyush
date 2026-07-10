@@ -40,7 +40,15 @@ export async function GET(request: Request) {
       );
     }
 
-    await assertCanMakeApiCallout();
+    if (!verified.userId) {
+      return apiError(
+        "INVALID_API_KEY",
+        "This API key is not linked to a user account. Sign in and create a new key from the dashboard.",
+        401,
+      );
+    }
+
+    await assertCanMakeApiCallout(verified.userId);
 
     const upstream = await fetch("https://catfact.ninja/fact", {
       headers: { Accept: "application/json" },

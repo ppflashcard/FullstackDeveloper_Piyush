@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -25,6 +26,12 @@ type SidebarProps = {
 
 export function Sidebar({ open = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const displayName = session?.user?.name?.trim() || "User";
+  const email = session?.user?.email ?? "";
+  const image = session?.user?.image;
+  const initial = displayName.charAt(0).toUpperCase() || "U";
 
   return (
     <aside
@@ -47,9 +54,9 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
           className="flex w-full items-center gap-2.5 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-left text-sm transition-colors hover:border-orange-300 dark:border-stone-700 dark:bg-stone-800"
         >
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
-            P
+            {initial}
           </span>
-          <span className="min-w-0 flex-1 truncate font-medium">Personal</span>
+          <span className="min-w-0 flex-1 truncate font-medium">{displayName}</span>
           <ChevronDownIcon className="h-4 w-4 shrink-0 text-stone-400" />
         </button>
       </div>
@@ -104,23 +111,36 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
 
       <div className="shrink-0 border-t border-stone-200 p-4 dark:border-stone-800">
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600 dark:bg-orange-950/50 dark:text-orange-400">
-            U
-          </span>
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={displayName}
+              className="h-8 w-8 shrink-0 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600 dark:bg-orange-950/50 dark:text-orange-400">
+              {initial}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">User Account</p>
+            <p className="truncate text-sm font-medium">{displayName}</p>
             <p className="truncate text-xs text-stone-500 dark:text-stone-400">
-              user@example.com
+              {email || "Signed in with Google"}
             </p>
           </div>
-          <Link
-            href="/"
-            onClick={onClose}
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.();
+              void signOut({ callbackUrl: "/login" });
+            }}
             className="shrink-0 rounded-md p-1.5 text-stone-400 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/30"
-            title="Back to home"
+            title="Sign out"
           >
             <LogoutIcon className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>

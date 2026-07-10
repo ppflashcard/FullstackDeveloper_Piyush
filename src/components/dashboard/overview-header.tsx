@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export function OverviewHeader() {
+  const { data: session } = useSession();
   const [dark, setDark] = useState(false);
+  const displayName = session?.user?.name?.trim();
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -27,7 +30,9 @@ export function OverviewHeader() {
           <p className="text-sm text-stone-500 dark:text-stone-400">
             Pages / <span className="text-stone-900 dark:text-stone-100">Overview</span>
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Overview</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            {displayName ? `Welcome, ${displayName}` : "Overview"}
+          </h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

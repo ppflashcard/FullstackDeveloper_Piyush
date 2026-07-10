@@ -4,8 +4,14 @@ export function getApiRouteErrorMessage(error: unknown, fallback: string): strin
       return "Supabase is not configured. Add credentials to .env.local and restart the dev server.";
     }
 
+    if (error.message.includes("user_id")) {
+      return error.message;
+    }
+
     if (error.message.includes("Database error")) {
-      return "Database error. Ensure the api_keys table exists in Supabase (run supabase/migrations/001_api_keys.sql).";
+      return error.message.includes(": ")
+        ? error.message
+        : "Database error. Ensure the api_keys table exists in Supabase (run supabase/migrations/001_api_keys.sql).";
     }
 
     return error.message || fallback;

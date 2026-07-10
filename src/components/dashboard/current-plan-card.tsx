@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useSession } from "next-auth/react";
 import { PLAN_CREDITS } from "@/lib/api-key-limits";
 
 type CurrentPlanCardProps = {
@@ -9,7 +9,9 @@ type CurrentPlanCardProps = {
 };
 
 export function CurrentPlanCard({ totalUsage }: CurrentPlanCardProps) {
+  const { data: session } = useSession();
   const [payAsYouGo, setPayAsYouGo] = useState(false);
+  const displayName = session?.user?.name?.trim() || "User";
 
   useEffect(() => {
     const stored = localStorage.getItem("pay-as-you-go");
@@ -36,7 +38,7 @@ export function CurrentPlanCard({ totalUsage }: CurrentPlanCardProps) {
             <span className="inline-block rounded-md bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-orange-600 dark:bg-orange-950/50 dark:text-orange-400">
               Current Plan
             </span>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Researcher</h2>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{displayName}</h2>
           </div>
           <button
             type="button"

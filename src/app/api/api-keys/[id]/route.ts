@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getApiRouteErrorMessage } from "@/lib/api-route-errors";
-import { deleteApiKey, getApiKey, updateApiKey } from "@/lib/api-keys-store";import type { UpdateApiKeyInput } from "@/types/api-key";
+import { deleteApiKey, getApiKey, updateApiKey } from "@/lib/api-keys-store";
+import { requireUserId } from "@/lib/require-user";
+import type { UpdateApiKeyInput } from "@/types/api-key";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -8,8 +10,11 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
+    const result = await requireUserId();
+    if ("error" in result) return result.error;
+
     const { id } = await context.params;
-    const apiKey = await getApiKey(id);
+    const apiKey = await getApiKey(id, result.userId);
 
     if (!apiKey) {
       return NextResponse.json({ error: "API key not found" }, { status: 404 });
@@ -19,13 +24,17 @@ export async function GET(_request: Request, context: RouteContext) {
   } catch (error) {
     console.error("GET /api/api-keys/[id] failed:", error);
     return NextResponse.json(
-      { error: getApiRouteErrorMessage(error, "Failed to load API key") },      { status: 500 },
+      { error: getApiRouteErrorMessage(error, "Failed to load API key") },
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
+    const result = await requireUserId();
+    if ("error" in result) return result.error;
+
     const { id } = await context.params;
     let body: UpdateApiKeyInput;
 
@@ -42,7 +51,7 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const updated = await updateApiKey(id, body);
+    const updated = await updateApiKey(id, body, result.userId);
 
     if (!updated) {
       return NextResponse.json({ error: "API key not found" }, { status: 404 });
@@ -52,15 +61,19 @@ export async function PUT(request: Request, context: RouteContext) {
   } catch (error) {
     console.error("PUT /api/api-keys/[id] failed:", error);
     return NextResponse.json(
-      { error: getApiRouteErrorMessage(error, "Failed to update API key") },      { status: 500 },
+      { error: getApiRouteErrorMessage(error, "Failed to update API key") },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
+    const result = await requireUserId();
+    if ("error" in result) return result.error;
+
     const { id } = await context.params;
-    const deleted = await deleteApiKey(id);
+    const deleted = await deleteApiKey(id, result.userId);
 
     if (!deleted) {
       return NextResponse.json({ error: "API key not found" }, { status: 404 });
@@ -70,7 +83,8 @@ export async function DELETE(_request: Request, context: RouteContext) {
   } catch (error) {
     console.error("DELETE /api/api-keys/[id] failed:", error);
     return NextResponse.json(
-      { error: getApiRouteErrorMessage(error, "Failed to delete API key") },      { status: 500 },
+      { error: getApiRouteErrorMessage(error, "Failed to delete API key") },
+      { status: 500 },
     );
   }
 }

@@ -14,6 +14,7 @@ type ApiKeyRow = {
   value: string;
   usage: number;
   created_at: string;
+  user_id?: string | null;
 };
 
 function generateKey(): string {
@@ -42,29 +43,38 @@ function toPublic(apiKey: ApiKey): ApiKeyPublic {
 
 function handleDbError(error: { message: string }, action: string): never {
   console.error(`Supabase ${action} failed:`, error.message);
-  throw new Error(`Database error while trying to ${action}`);
+
+  if (error.message.includes("user_id")) {
+    throw new Error(
+      "Database is missing the user_id column. Run supabase/migrations/003_api_keys_user_id.sql in the Supabase SQL Editor.",
+    );
+  }
+
+  throw new Error(`Database error while trying to ${action}: ${error.message}`);
 }
 
-const API_KEY_COLUMNS = "id, name, value, usage, created_at";
+const API_KEY_COLUMNS = "id, name, value, usage, created_at, user_id";
 
-export async function countActiveApiKeys(): Promise<number> {
+export async function countActiveApiKeys(userId: string): Promise<number> {
   const supabase = getSupabaseAdmin();
 
   const { count, error } = await supabase
     .from("api_keys")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
 
   if (error) handleDbError(error, "count API keys");
 
   return count ?? 0;
 }
 
-export async function listApiKeys(): Promise<ApiKeyPublic[]> {
+export async function listApiKeys(userId: string): Promise<ApiKeyPublic[]> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("api_keys")
     .select(API_KEY_COLUMNS)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) handleDbError(error, "list API keys");
@@ -72,13 +82,17 @@ export async function listApiKeys(): Promise<ApiKeyPublic[]> {
   return (data ?? []).map((row) => toPublic(rowToApiKey(row as ApiKeyRow)));
 }
 
-export async function getApiKey(id: string): Promise<ApiKeyPublic | null> {
+export async function getApiKey(
+  id: string,
+  userId: string,
+): Promise<ApiKeyPublic | null> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("api_keys")
     .select(API_KEY_COLUMNS)
     .eq("id", id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (error) handleDbError(error, "get API key");
@@ -87,8 +101,11 @@ export async function getApiKey(id: string): Promise<ApiKeyPublic | null> {
   return toPublic(rowToApiKey(data as ApiKeyRow));
 }
 
-export async function createApiKey(input: CreateApiKeyInput): Promise<ApiKey> {
-  const activeCount = await countActiveApiKeys();
+export async function createApiKey(
+  input: CreateApiKeyInput,
+  userId: string,
+): Promise<ApiKey> {
+  const activeCount = await countActiveApiKeys(userId);
   if (activeCount >= MAX_ACTIVE_API_KEYS) {
     throw new ApiKeyLimitError();
   }
@@ -103,6 +120,7 @@ export async function createApiKey(input: CreateApiKeyInput): Promise<ApiKey> {
       value: generateKey(),
       usage: 0,
       created_at: now,
+      user_id: userId,
     })
     .select(API_KEY_COLUMNS)
     .single();
@@ -116,6 +134,7 @@ export async function createApiKey(input: CreateApiKeyInput): Promise<ApiKey> {
 export async function updateApiKey(
   id: string,
   input: UpdateApiKeyInput,
+  userId: string,
 ): Promise<ApiKeyPublic | null> {
   const supabase = getSupabaseAdmin();
 
@@ -123,6 +142,7 @@ export async function updateApiKey(
     .from("api_keys")
     .update({ name: input.name.trim() })
     .eq("id", id)
+    .eq("user_id", userId)
     .select(API_KEY_COLUMNS)
     .maybeSingle();
 
@@ -136,13 +156,14 @@ export async function updateApiKey(
   });
 }
 
-export async function deleteApiKey(id: string): Promise<boolean> {
+export async function deleteApiKey(id: string, userId: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("api_keys")
     .delete()
     .eq("id", id)
+    .eq("user_id", userId)
     .select("id")
     .maybeSingle();
 
@@ -153,7 +174,7 @@ export async function deleteApiKey(id: string): Promise<boolean> {
 
 export async function verifyApiKeyByValue(
   key: string,
-): Promise<{ valid: true; name: string } | { valid: false }> {
+): Promise<{ valid: true; name: string; userId: string | null } | { valid: false }> {
   const supabase = getSupabaseAdmin();
   const trimmed = key.trim();
 
@@ -163,7 +184,7 @@ export async function verifyApiKeyByValue(
 
   const { data, error } = await supabase
     .from("api_keys")
-    .select("name")
+    .select("name, user_id")
     .eq("value", trimmed)
     .maybeSingle();
 
@@ -173,34 +194,41 @@ export async function verifyApiKeyByValue(
     return { valid: false };
   }
 
-  return { valid: true, name: data.name };
+  return {
+    valid: true,
+    name: data.name,
+    userId: (data.user_id as string | null) ?? null,
+  };
 }
 
 export function extractApiKeyFromRequest(request: Request): string | null {
   const headerKey = request.headers.get("x-api-key")?.trim();
   if (headerKey) return headerKey;
 
-  const auth = request.headers.get("authorization")?.trim();
-  if (auth?.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice(7).trim();
+  const authHeader = request.headers.get("authorization")?.trim();
+  if (authHeader?.toLowerCase().startsWith("bearer ")) {
+    const token = authHeader.slice(7).trim();
     if (token) return token;
   }
 
   return null;
 }
 
-export async function getTotalApiUsage(): Promise<number> {
+export async function getTotalApiUsage(userId: string): Promise<number> {
   const supabase = getSupabaseAdmin();
 
-  const { data, error } = await supabase.from("api_keys").select("usage");
+  const { data, error } = await supabase
+    .from("api_keys")
+    .select("usage")
+    .eq("user_id", userId);
 
   if (error) handleDbError(error, "get total API usage");
 
   return (data ?? []).reduce((sum, row) => sum + (Number(row.usage) || 0), 0);
 }
 
-export async function assertCanMakeApiCallout(): Promise<void> {
-  const totalUsage = await getTotalApiUsage();
+export async function assertCanMakeApiCallout(userId: string): Promise<void> {
+  const totalUsage = await getTotalApiUsage(userId);
 
   if (totalUsage >= PLAN_CREDITS) {
     throw new ApiUsageLimitError(totalUsage);
