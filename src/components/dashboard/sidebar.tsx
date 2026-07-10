@@ -7,14 +7,14 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { label: "Overview", href: "/dashboard", icon: GridIcon },
   { label: "API Playground", href: "/dashboard/playground", icon: CodeIcon },
+  { label: "Documentation", href: "/dashboard/documentation", icon: BookIcon },
   { label: "Use Cases", href: "/dashboard/use-cases", icon: LayersIcon },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCardIcon },
   { label: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
 ];
 
 const EXTERNAL_ITEMS = [
-  { label: "Documentation", href: "https://nextjs.org/docs", icon: BookIcon },
-  { label: "API Reference", href: "/api/health", icon: LinkIcon },
+  { label: "API Reference", href: "/dashboard/documentation#api-reference", icon: LinkIcon },
   { label: "Community", href: "https://discord.com", icon: UsersIcon },
 ];
 
@@ -94,7 +94,9 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              <ExternalIcon className="h-3.5 w-3.5 shrink-0 opacity-50" />
+              {isExternal ? (
+                <ExternalIcon className="h-3.5 w-3.5 shrink-0 opacity-50" />
+              ) : null}
             </a>
           );
         })}
